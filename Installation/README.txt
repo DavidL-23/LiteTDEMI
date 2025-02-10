@@ -1,0 +1,1 @@
+Copy these files into the picoscope directory to solve the MATLAB driver issue
