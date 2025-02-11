@@ -1,14 +1,14 @@
-% When data is loaded in as a matlab file from PicoScope. 
-% timeIntevnalNanoSeconds = The timeing for the picoscope collected at (time for each sample)
+function Process_StreamLive(FileName)
 
-clear; 
-%close all;
+% clc;
+% clear; 
+% close all;
 
 %% Load Settings
 
 %settingsLoc = uigetdir('C:\Users\RDCRLDL9\Desktop\Picoscope_Collect\');
-settingsLoc = uigetdir('C:\Users\RDCRLDL9\Desktop\LiteTDEMI\Data\');
-load([settingsLoc, '\settings.mat'], 'settings');
+dataLoc = fullfile('C:\Users\RDCRLDL9\Desktop\Data_Lite\', FileName{1});
+load([dataLoc, '\settings.mat'], 'settings');
  
 % Default Settings
 Data=[];
@@ -17,19 +17,9 @@ BinsToAdd = 120;
 
 %% Load Data
 
-% This will load all the files in the folder and put them into the
-% "Data" and "Current" arrays.  Each file is tacked onto the end so that
-% it is a 1 x BIG array.
-
-dirLoc = uigetdir(settingsLoc);
-if dirLoc == 0
-
-    return;
-end
-
-[dirSaveLoc, dirChosen] = fileparts(dirLoc);
+[dirSaveLoc, dirChosen] = fileparts(dataLoc);
 fNames = (dirChosen + "_");
-fldtmp = fullfile(dirLoc, fNames);
+fldtmp = fullfile(dataLoc, fNames);
 
 result = settings(strcmp(settings.FNames, dirChosen), 2:end);
 NumberofWaves = result.Count(1);
@@ -39,14 +29,12 @@ for i = 1:NumberofWaves
     % Load Data File
     tmpN = int2str(i);
     filename = strcat(fldtmp, tmpN, '.mat');
-    load(filename);
+    load(filename, 'chA', 'chB', 'timeIntervalNanoSeconds');
 
     % Append Channels Data to Respective Arrays
     N = length(chA);
     Data((i-1)*N+1:i*N) = chA(1:N);
     Current((i-1)*N+1:i*N) = chB(1:N);
-
-    %TimeN(i) = Tstart;
 end
 
 Data = abs(double(chA))';
@@ -54,17 +42,18 @@ Current = abs(double(chB))';
 
 %% Data Binning
 
+%timeIntervalNanoSeconds = timeIntervalNanoSeconds * (1e-9);      % Convert to Nano Seconds
+itimeStart = zeros(1, 100);
+
 tmpP = find(abs(Current) > 4500);                       % Misha sends a large spike to indicate the end of the transmitted pulse.  Find those spikes
 itimeStart(1) = min(tmpP(1));                           % Find the first place where the spike is >1V
 dtime = tmpP(1) + BinsToAdd;                            % 120 is the number of data points to ignore after the spike.  Talk to Fridon about how this is calculated
 icount = 1;
 
-% Finding the start time and doing a quick error check
-%timeIntervalNanoSeconds = timeIntervalNanoSeconds * (1e-9);      % Convert to Nano Seconds
 for itime = 2:length(tmpP)
 
     timeTmp = timeIntervalNanoSeconds * (tmpP - dtime);
-    IK = min(find(timeTmp > 0)); 
+    IK = find(timeTmp > 0, 1 ); 
 
     if(isempty(IK) == 0)
 
@@ -74,6 +63,8 @@ for itime = 2:length(tmpP)
         %dtime(icount) = tmpP((IK)) + BinsToAdd
     end
 end
+
+itimeStart = itimeStart(itimeStart > 0);
 
 Signal(1:2e4) = 0;                                      % Signal will be 1:2e4 in length which equates to 1e-6 to 2e-3 seconds (i.e 0.1-2000 microseconds)
 for icount = 1:length(itimeStart)-5                     % Skip the last 5 b/c of timing decay cut-offs
@@ -86,50 +77,51 @@ Tmin = timeIntervalNanoSeconds;
 Tmax = 1*2e4*timeIntervalNanoSeconds;
 
 NtmpTime = 50;                                          % Number of bins
+Npoint = zeros(NtmpTime, 2);
+SignalFinnal = zeros(1, NtmpTime);
 
 TimeTmp = log10(Tmin):(log10(Tmax)-log10(Tmin))/NtmpTime:log10(Tmax);
 for ipoint = 1:size(TimeTmp,2)-1
     
-    Npoint(ipoint,1) = max(find(log10(RawTime)<=TimeTmp(ipoint)));
-    Npoint(ipoint,2) = max(find(log10(RawTime)<TimeTmp(ipoint+1)));
+    Npoint(ipoint,1) = find(log10(RawTime)<=TimeTmp(ipoint), 1, 'last' );
+    Npoint(ipoint,2) = find(log10(RawTime)<TimeTmp(ipoint+1), 1, 'last' );
 
     SignalFinnal(ipoint) = mean(Signal(Npoint(ipoint,1):Npoint(ipoint,2)));
 end
 
-
 %% Plot Data
 
 prompt = "Is this background? (Y/N)";
-ans = input(prompt, "s");
+answer = input(prompt, "s");
 
-if ans == "Y"
+if answer == "Y" || answer == 'y'
 
     BKG = SignalFinnal;
     save(fullfile(dirSaveLoc, "Background.mat"), "BKG");
 else
 
-      ans = "N";
+      answer = "N";
 end
 
-if ans == "N"
+if answer == "N" || answer == 'n'
 
     BKG = load(fullfile(dirSaveLoc, "Background.mat"));
     BKG = BKG.BKG;
+
     figure
+
     loglog(10.^TimeTmp(1:NtmpTime), abs(BKG), '--+')
-    hold on
+     hold on
     loglog(10.^TimeTmp(1:NtmpTime), abs(SignalFinnal), '--x')
     loglog(10.^TimeTmp(1:NtmpTime), abs((SignalFinnal)-(BKG)), '-o')
+
+    legend('Bkg', 'Signal', 'Bkg Subtract')
+    title('Overlayed - ', settings{1,1})
+    xlabel('Frequency (Hz)')
+    ylabel('Magnitude (V)')
+
     hold off
-    grid on;
-    legend('Bkg','Signal','Bkg Subtract')
-    title('Overlayed')
+    grid on
 end
 
-%% Testing Code
-
-% for i= 1:length(itimeStart) 
-% 
-%     xline(itimeStart(i)); 
-% 
-% end
+end

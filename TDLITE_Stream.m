@@ -2,15 +2,12 @@ function TDLITE_Stream(app)
 
 %% Clear command window and close any figures
 
-clc;
-clear;
-close all;
+% clc;
+% clear;
+% close all;
 
-% Settings
-FNames = {}; 
-%Count = {};
-
-sampleSize = 2e6;
+sampleSize = 20e6;
+bufferSize = 5e6;
 timeIntervalNanoSeconds = 25.0e-9;
 sampleRate = 1/timeIntervalNanoSeconds;
 
@@ -34,9 +31,7 @@ try
     
     % % Setup paths and also load struct and enumeration information. Enumeration
     % % values are required for certain function calls.
-    % 
     % [~, ps4000aEnuminfo] = ps4000aSetConfig(); % DO NOT EDIT THIS LINE.
-
     PS4000aConfig;
 
     %% Parameter definitions
@@ -106,7 +101,7 @@ try
     % Range          : 8 (ps4000aEnuminfo.enPS4000ARange.PS4000A_5V)
     % Analogue Offset: 0.0
 
-  % Ranges: 0 -> 10mV,  1 -> 20mV,  2 -> 50mV
+    % Ranges: 0 -> 10mV,  1 -> 20mV,  2 -> 50mV
     % Ranges: 3 -> 100mV, 4 -> 200mV, 5 -> 500mV
     % Ranges: 6 -> 1V,    7 -> 2V,    8 -> 5V
     % Ranges: 9 -> 10V,  10 -> 20V,  11 -> 50V
@@ -191,9 +186,9 @@ try
     % Obtain the range and units for each enabled channel. For the PicoScope
     % 4824, this will be in millivolts.
     [chAInputRange, chAUnits] = invoke(pscope1, 'getChannelInputRangeAndUnits', ps4000aEnuminfo.enPS4000AChannel.PS4000A_CHANNEL_A);
-    [chBInputRange, chBUnits] = invoke(pscope1, 'getChannelInputRangeAndUnits', ps4000aEnuminfo.enPS4000AChannel.PS4000A_CHANNEL_B);
-    [chCInputRange, chCUnits] = invoke(pscope1, 'getChannelInputRangeAndUnits', ps4000aEnuminfo.enPS4000AChannel.PS4000A_CHANNEL_C);
-    [chDInputRange, chDUnits] = invoke(pscope1, 'getChannelInputRangeAndUnits', ps4000aEnuminfo.enPS4000AChannel.PS4000A_CHANNEL_D);
+    [chBInputRange, ~] = invoke(pscope1, 'getChannelInputRangeAndUnits', ps4000aEnuminfo.enPS4000AChannel.PS4000A_CHANNEL_B);
+    [chCInputRange, ~] = invoke(pscope1, 'getChannelInputRangeAndUnits', ps4000aEnuminfo.enPS4000AChannel.PS4000A_CHANNEL_C);
+    [chDInputRange, ~] = invoke(pscope1, 'getChannelInputRangeAndUnits', ps4000aEnuminfo.enPS4000AChannel.PS4000A_CHANNEL_D);
     
     % Obtain the maximum Analog Digital Converter Count value from the driver
     % - this is used for scaling values returned from the driver when data is
@@ -201,13 +196,13 @@ try
     maxADCCount = double(get(pscope1, 'maxADCValue'));
 
     %% Set data buffers
-    
+        
     % Data buffers for Channel A and B - buffers should be set with the
     % (lib)ps400a shared library, and these *MUST* be passed with application
     % buffers to the wrapper shared library. This will ensure that data is
     % correctly copied from the shared library buffers for later processing.
     
-    overviewBufferSize  = sampleSize * 2; % Size of the buffer(s) to collect data from the driver's buffer(s).
+    overviewBufferSize  = bufferSize * 2; % Size of the buffer(s) to collect data from the driver's buffer(s).
     segmentIndex        = 0;   
     ratioMode           = ps4000aEnuminfo.enPS4000ARatioMode.PS4000A_RATIO_MODE_NONE;
 
@@ -217,16 +212,16 @@ try
     pDriverBufferChC = libpointer('int16Ptr', zeros(overviewBufferSize, 1, 'int16'));
     pDriverBufferChD = libpointer('int16Ptr', zeros(overviewBufferSize, 1, 'int16'));
     
-    status.setDataBufferChA = invoke(pscope1, 'ps4000aSetDataBuffer', ...
+    status1.setDataBufferChA = invoke(pscope1, 'ps4000aSetDataBuffer', ...
     channelA, pDriverBufferChA, overviewBufferSize, segmentIndex, ratioMode);
 
-    status.setDataBufferChB = invoke(pscope1, 'ps4000aSetDataBuffer', ...
+    status1.setDataBufferChB = invoke(pscope1, 'ps4000aSetDataBuffer', ...
         channelB, pDriverBufferChB, overviewBufferSize, segmentIndex, ratioMode);
     
-    status.setDataBufferChC = invoke(pscope1, 'ps4000aSetDataBuffer', ...
+    status1.setDataBufferChC = invoke(pscope1, 'ps4000aSetDataBuffer', ...
         channelC, pDriverBufferChC, overviewBufferSize, segmentIndex, ratioMode);
     
-    status.setDataBufferChD = invoke(pscope1, 'ps4000aSetDataBuffer', ...
+    status1.setDataBufferChD = invoke(pscope1, 'ps4000aSetDataBuffer', ...
         channelD, pDriverBufferChD, overviewBufferSize, segmentIndex, ratioMode);
     
     % Application Buffers - these are for temporarily copying data from the driver.
@@ -241,20 +236,20 @@ try
     streamingGroupObj = streamingGroupObj(1);
     
     % Register application buffer and driver buffers (with the wrapper driver).
-    status.setAppAndDriverBuffersA = invoke(streamingGroupObj, 'setAppAndDriverBuffers', channelA, ...
+    status1.setAppAndDriverBuffersA = invoke(streamingGroupObj, 'setAppAndDriverBuffers', channelA, ...
     pAppBufferChA, pDriverBufferChA, overviewBufferSize);
 
-    status.setAppAndDriverBuffersB = invoke(streamingGroupObj, 'setAppAndDriverBuffers', channelB, ...
+    status1.setAppAndDriverBuffersB = invoke(streamingGroupObj, 'setAppAndDriverBuffers', channelB, ...
         pAppBufferChB, pDriverBufferChB, overviewBufferSize);
     
-    status.setAppAndDriverBuffersC = invoke(streamingGroupObj, 'setAppAndDriverBuffers', channelC, ...
+    status1.setAppAndDriverBuffersC = invoke(streamingGroupObj, 'setAppAndDriverBuffers', channelC, ...
         pAppBufferChC, pDriverBufferChC, overviewBufferSize);
     
-    status.setAppAndDriverBuffersD = invoke(streamingGroupObj, 'setAppAndDriverBuffers', channelD, ...
+    status1.setAppAndDriverBuffersD = invoke(streamingGroupObj, 'setAppAndDriverBuffers', channelD, ...
         pAppBufferChD, pDriverBufferChD, overviewBufferSize);
     
     %% Start streaming and collect data
-    
+
     % Use default value for streaming interval which is 1e-6 for 1 MS/s.
     % Collect data for 1 second with auto stop. The maximum array size will
     % depend on the PC's resources. For further information, type |memory| in
@@ -265,8 +260,7 @@ try
     % sampling interval used by the driver.
     
     % For 200 kS/s, specify 5 us
-    %set(streamingGroupObj, 'streamingInterval', 5e-6);
-    
+    % set(streamingGroupObj, 'streamingInterval', 5e-6);
     % For 10 MS/s, specify 100 ns
     set(streamingGroupObj, 'streamingInterval', timeIntervalNanoSeconds);
     
@@ -276,7 +270,7 @@ try
     set(pscope1, 'numPostTriggerSamples', sampleSize);
     
     % The autoStop parameter can be set to false (0).
-    set(streamingGroupObj, 'autoStop', PicoConstants.FALSE);
+    %set(streamingGroupObj, 'autoStop', PicoConstants.FALSE);
 
     % Set other streaming parameters
     downSampleRatio     = 1;
@@ -319,10 +313,10 @@ try
     
     % Variables to be used when collecting the data
     isAutoStopSet       = PicoConstants.FALSE;
-    newSamples          = 0; % Number of new samples returned from the driver.
-    previousTotal       = 0; % The previous total number of samples.
+    %newSamples          = 0; % Number of new samples returned from the driver.
+    %previousTotal       = 0; % The previous total number of samples.
     totalSamples        = 0; % Total number of samples captured by the device.
-    startIndex          = 0; % Start index of data in the buffer returned (zero-based).
+    %startIndex          = 0; % Start index of data in the buffer returned (zero-based).
     hasTriggered        = 0; % To indicate if trigger event has occurred.
     triggeredAtIndex    = 0; % The index in the overall buffer where the trigger occurred (zero-based).
     
@@ -511,18 +505,15 @@ try
     
     %% Stop the device
 
-    % This function should be called regardless of whether the |autoStop|
-    % property is enabled or not.
-    
+    % % Stop the device
     status1.stop = invoke(pscope1, 'ps4000aStop');
 
     %% Find the number of samples
 
     % This is the number of samples held in the |(lib)ps4000a| shared library itself. The actual
     % number of samples collected when using a trigger is likely to be greater.
-    [status1.noOfStreamingValues, numStreamingValues] = invoke(streamingGroupObj, 'ps4000aNoOfStreamingValues');
-    
-    fprintf('Number of samples available from the driver: %u.\n\n', numStreamingValues);
+    % [status1.noOfStreamingValues, numStreamingValues] = invoke(streamingGroupObj, 'ps4000aNoOfStreamingValues');
+    % fprintf('Number of samples available from the driver: %u.\n\n', numStreamingValues);
     
     %% Process data
 
@@ -575,20 +566,17 @@ try
     definput = {'Bkg'};
     answer = inputdlg(prompt, dlgtitle, fieldsize, definput);
 
-    mkdir(answer{1})
-    currFolder = [pwd, '\', answer{1}];
+    %currFolder = [pwd, '\', answer{1}];
+    currFolder = ['C:\Users\RDCRLDL9\Desktop\Data_Lite\', answer{1}];
+    mkdir(currFolder)
 
-    % Append File Names
-    FNames = [FNames; answer{1}];
-
+    FNames = answer{1};
     Count = 1;
     
     app.fileout = [currFolder, '\', answer{1}, '_', num2str(Count) , '.mat'];
+    save(app.fileout, 'chA', 'chB', 'chC', 'chD', 'timeIntervalNanoSeconds', 'sampleRate');
 
-    save(app.fileout, 'ch*', 'timeIntervalNanoSeconds', 'sampleRate');
-
-    settings = table(FNames, Count);
-
+    settings = table({FNames}, Count, 'VariableNames', {'FNames', 'Count'});
     save([currFolder, '\settings.mat'], 'settings')
     
     %% Disconnect device
