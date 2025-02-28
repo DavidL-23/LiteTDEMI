@@ -6,9 +6,10 @@ function TDLITE_StreamLive(app)
 % clear;
 % close all;
 
-sampleSize = 20e6;
+sampleSize = 40e6;
 bufferSize = 5e6;
-timeIntervalNanoSeconds = 25.0e-9;
+%timeIntervalNanoSeconds = 25.0e-9;
+timeIntervalNanoSeconds = 12.5e-9;
 sampleRate = 1/timeIntervalNanoSeconds;
 
 if nargin == 0
@@ -132,13 +133,13 @@ try
             pscope1.channelCount == PicoConstants.OCTO_SCOPE)
     
         % Channel C
-        channelSettings(3).enabled          = PicoConstants.TRUE;
+        channelSettings(3).enabled          = PicoConstants.FALSE;
         channelSettings(3).coupling         = ps4000aEnuminfo.enPS4000ACoupling.PS4000A_DC;
         channelSettings(3).range            = ps4000aEnuminfo.enPS4000ARange.PS4000A_5V;
         channelSettings(3).analogueOffset   = 0.0;
     
         % Channel D
-        channelSettings(4).enabled          = PicoConstants.TRUE;
+        channelSettings(4).enabled          = PicoConstants.FALSE;
         channelSettings(4).coupling         = ps4000aEnuminfo.enPS4000ACoupling.PS4000A_DC;
         channelSettings(4).range            = ps4000aEnuminfo.enPS4000ARange.PS4000A_5V;
         channelSettings(4).analogueOffset   = 0.0;
@@ -187,8 +188,8 @@ try
     % 4824, this will be in millivolts.
     [chAInputRange, chAUnits] = invoke(pscope1, 'getChannelInputRangeAndUnits', ps4000aEnuminfo.enPS4000AChannel.PS4000A_CHANNEL_A);
     [chBInputRange, ~] = invoke(pscope1, 'getChannelInputRangeAndUnits', ps4000aEnuminfo.enPS4000AChannel.PS4000A_CHANNEL_B);
-    [chCInputRange, ~] = invoke(pscope1, 'getChannelInputRangeAndUnits', ps4000aEnuminfo.enPS4000AChannel.PS4000A_CHANNEL_C);
-    [chDInputRange, ~] = invoke(pscope1, 'getChannelInputRangeAndUnits', ps4000aEnuminfo.enPS4000AChannel.PS4000A_CHANNEL_D);
+    %[chCInputRange, ~] = invoke(pscope1, 'getChannelInputRangeAndUnits', ps4000aEnuminfo.enPS4000AChannel.PS4000A_CHANNEL_C);
+    %[chDInputRange, ~] = invoke(pscope1, 'getChannelInputRangeAndUnits', ps4000aEnuminfo.enPS4000AChannel.PS4000A_CHANNEL_D);
     
     % Obtain the maximum Analog Digital Converter Count value from the driver
     % - this is used for scaling values returned from the driver when data is
@@ -209,8 +210,8 @@ try
     % Buffers to be passed to the driver
     pDriverBufferChA = libpointer('int16Ptr', zeros(overviewBufferSize, 1, 'int16'));
     pDriverBufferChB = libpointer('int16Ptr', zeros(overviewBufferSize, 1, 'int16'));
-    pDriverBufferChC = libpointer('int16Ptr', zeros(overviewBufferSize, 1, 'int16'));
-    pDriverBufferChD = libpointer('int16Ptr', zeros(overviewBufferSize, 1, 'int16'));
+    %pDriverBufferChC = libpointer('int16Ptr', zeros(overviewBufferSize, 1, 'int16'));
+    %pDriverBufferChD = libpointer('int16Ptr', zeros(overviewBufferSize, 1, 'int16'));
     
     status1.setDataBufferChA = invoke(pscope1, 'ps4000aSetDataBuffer', ...
     channelA, pDriverBufferChA, overviewBufferSize, segmentIndex, ratioMode);
@@ -218,17 +219,17 @@ try
     status1.setDataBufferChB = invoke(pscope1, 'ps4000aSetDataBuffer', ...
         channelB, pDriverBufferChB, overviewBufferSize, segmentIndex, ratioMode);
     
-    status1.setDataBufferChC = invoke(pscope1, 'ps4000aSetDataBuffer', ...
-        channelC, pDriverBufferChC, overviewBufferSize, segmentIndex, ratioMode);
+    %status1.setDataBufferChC = invoke(pscope1, 'ps4000aSetDataBuffer', ...
+    %    channelC, pDriverBufferChC, overviewBufferSize, segmentIndex, ratioMode);
     
-    status1.setDataBufferChD = invoke(pscope1, 'ps4000aSetDataBuffer', ...
-        channelD, pDriverBufferChD, overviewBufferSize, segmentIndex, ratioMode);
+    %status1.setDataBufferChD = invoke(pscope1, 'ps4000aSetDataBuffer', ...
+    %    channelD, pDriverBufferChD, overviewBufferSize, segmentIndex, ratioMode);
     
     % Application Buffers - these are for temporarily copying data from the driver.
     pAppBufferChA = libpointer('int16Ptr', zeros(overviewBufferSize, 1));
     pAppBufferChB = libpointer('int16Ptr', zeros(overviewBufferSize, 1));
-    pAppBufferChC = libpointer('int16Ptr', zeros(overviewBufferSize, 1));
-    pAppBufferChD = libpointer('int16Ptr', zeros(overviewBufferSize, 1));
+    %pAppBufferChC = libpointer('int16Ptr', zeros(overviewBufferSize, 1));
+    %pAppBufferChD = libpointer('int16Ptr', zeros(overviewBufferSize, 1));
     
     % Streaming properties and functions are located in the Instrument
     % Driver's Streaming group.
@@ -242,11 +243,11 @@ try
     status1.setAppAndDriverBuffersB = invoke(streamingGroupObj, 'setAppAndDriverBuffers', channelB, ...
         pAppBufferChB, pDriverBufferChB, overviewBufferSize);
     
-    status1.setAppAndDriverBuffersC = invoke(streamingGroupObj, 'setAppAndDriverBuffers', channelC, ...
-        pAppBufferChC, pDriverBufferChC, overviewBufferSize);
-    
-    status1.setAppAndDriverBuffersD = invoke(streamingGroupObj, 'setAppAndDriverBuffers', channelD, ...
-        pAppBufferChD, pDriverBufferChD, overviewBufferSize);
+    % status1.setAppAndDriverBuffersC = invoke(streamingGroupObj, 'setAppAndDriverBuffers', channelC, ...
+    %     pAppBufferChC, pDriverBufferChC, overviewBufferSize);
+    % 
+    % status1.setAppAndDriverBuffersD = invoke(streamingGroupObj, 'setAppAndDriverBuffers', channelD, ...
+    %     pAppBufferChD, pDriverBufferChD, overviewBufferSize);
         
     %% Start streaming and collect data
     while true
@@ -290,8 +291,8 @@ try
         % finalBufferLength = round(1.5 * maxSamples / downSampleRatio);   
         pBufferChAFinal = libpointer('int16Ptr', zeros(maxSamples, 1, 'int16'));
         pBufferChBFinal = libpointer('int16Ptr', zeros(maxSamples, 1, 'int16'));
-        pBufferChCFinal = libpointer('int16Ptr', zeros(maxSamples, 1, 'int16'));
-        pBufferChDFinal = libpointer('int16Ptr', zeros(maxSamples, 1, 'int16'));
+        % pBufferChCFinal = libpointer('int16Ptr', zeros(maxSamples, 1, 'int16'));
+        % pBufferChDFinal = libpointer('int16Ptr', zeros(maxSamples, 1, 'int16'));
         
         % Prompt User to indicate if they wish to plot live streaming data.
         plotLiveData = questionDialog('Plot live streaming data?', 'Streaming Data Plot');
@@ -424,8 +425,8 @@ try
                 % example
                 bufferChAmV = adc2mv(pAppBufferChA.Value(firstValuePosn:lastValuePosn), chAInputRange, maxADCCount);
                 bufferChBmV = adc2mv(pAppBufferChB.Value(firstValuePosn:lastValuePosn), chBInputRange, maxADCCount);
-                bufferChCmV = adc2mv(pAppBufferChC.Value(firstValuePosn:lastValuePosn), chCInputRange, maxADCCount);
-                bufferChDmV = adc2mv(pAppBufferChD.Value(firstValuePosn:lastValuePosn), chDInputRange, maxADCCount);
+                % bufferChCmV = adc2mv(pAppBufferChC.Value(firstValuePosn:lastValuePosn), chCInputRange, maxADCCount);
+                % bufferChDmV = adc2mv(pAppBufferChD.Value(firstValuePosn:lastValuePosn), chDInputRange, maxADCCount);
         
                 % Process collected data further if required - this example plots
                 % the data if the User has selected 'Yes' at the prompt.
@@ -433,8 +434,8 @@ try
                 % Copy data into the final buffer(s).
                 pBufferChAFinal.Value(previousTotal + 1:totalSamples) = bufferChAmV;
                 pBufferChBFinal.Value(previousTotal + 1:totalSamples) = bufferChBmV;
-                pBufferChCFinal.Value(previousTotal + 1:totalSamples) = bufferChCmV;
-                pBufferChDFinal.Value(previousTotal + 1:totalSamples) = bufferChDmV;
+                % pBufferChCFinal.Value(previousTotal + 1:totalSamples) = bufferChCmV;
+                % pBufferChDFinal.Value(previousTotal + 1:totalSamples) = bufferChDmV;
                 
                 % if (plotLiveData == PicoConstants.TRUE)
                 % 
@@ -513,14 +514,14 @@ try
             
             pBufferChAFinal.Value(totalSamples + 1:end) = [];
             pBufferChBFinal.Value(totalSamples + 1:end) = [];
-            pBufferChCFinal.Value(totalSamples + 1:end) = [];
-            pBufferChDFinal.Value(totalSamples + 1:end) = [];
+            % pBufferChCFinal.Value(totalSamples + 1:end) = [];
+            % pBufferChDFinal.Value(totalSamples + 1:end) = [];
         end
 
         chA = pBufferChAFinal.Value();
         chB = pBufferChBFinal.Value();
-        chC = pBufferChCFinal.Value();
-        chD = pBufferChDFinal.Value();
+        % chC = pBufferChCFinal.Value();
+        % chD = pBufferChDFinal.Value();
     
         % % Save Data
         prompt = {'Enter Datashot Type:'};
@@ -537,7 +538,7 @@ try
         Count = 1;
         
         app.fileout = [currFolder, '\', answer{1}, '_', num2str(Count) , '.mat'];
-        save(app.fileout, 'chA', 'chB', 'chC', 'chD', 'timeIntervalNanoSeconds', 'sampleRate');
+        save(app.fileout, 'chA', 'chB', 'timeIntervalNanoSeconds', 'sampleRate');
     
         settings = table({FNames}, Count, 'VariableNames', {'FNames', 'Count'});
         save([currFolder, '\settings.mat'], 'settings')
