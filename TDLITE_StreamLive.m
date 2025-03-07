@@ -6,8 +6,8 @@ function TDLITE_StreamLive(app)
 % clear;
 % close all;
 
-sampleSize = 40e6;
-bufferSize = 5e6;
+sampleSize = 200e6;
+bufferSize = 50e6;
 %timeIntervalNanoSeconds = 25.0e-9;
 timeIntervalNanoSeconds = 12.5e-9;
 sampleRate = 1/timeIntervalNanoSeconds;

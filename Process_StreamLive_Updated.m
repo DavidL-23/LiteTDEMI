@@ -1,4 +1,4 @@
-function Process_StreamLive(FileName)
+function Process_StreamLive_Updated(FileName)
 
 
 
@@ -35,8 +35,8 @@ for i = 1:NumberofWaves
     Current((i-1)*N+1:i*N) = chB(1:N);
 end
 
-Data = abs(double(chA))';
-Current = abs(double(chB))';
+Current = Current' - mean(Current); %remove the DC spike
+Data = Data - mean(Data);
 
 %% Data Binning
 
@@ -63,6 +63,7 @@ for itime = 2:length(tmpP)
 end
 
 itimeStart = itimeStart(itimeStart > 0);
+
 
 Signal(1:2e4) = 0;                                      % Signal will be 1:2e4 in length which equates to 1e-6 to 2e-3 seconds (i.e 0.1-2000 microseconds)
 for icount = 1:length(itimeStart)-5                     % Skip the last 5 b/c of timing decay cut-offs
