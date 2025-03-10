@@ -1,17 +1,14 @@
 function Process_StreamLive_Updated(FileName)
 
-
-
 %% Load Settings
 
-%settingsLoc = uigetdir('C:\Users\RDCRLDL9\Desktop\Picoscope_Collect\');
-dataLoc = fullfile('C:\Users\RDCRLDL9\Desktop\Data_Lite\', FileName{1});
+dataLoc = fullfile([getenv('HOMEDRIVE'), getenv('HOMEPATH'), '\Desktop\Data_Lite', FileName{1}]);
+%dataLoc = fullfile('C:\Users\RDCRLDL9\Desktop\Data_Lite\', FileName{1});
 load([dataLoc, '\settings.mat'], 'settings');
  
 % Default Settings
-Data=[];
-Current=[];
-BinsToAdd = 120;
+Data = [];
+Current = [];
 
 %% Load Data
 
@@ -40,48 +37,54 @@ Data = Data - mean(Data);
 
 %% Data Binning
 
-%timeIntervalNanoSeconds = timeIntervalNanoSeconds * (1e-9);      % Convert to Nano Seconds
-itimeStart = zeros(1, 100);
+BinsToAdd = 120;
 
-tmpP = find(abs(Current) > 4500);                       % Misha sends a large spike to indicate the end of the transmitted pulse.  Find those spikes
-itimeStart(1) = min(tmpP(1));                           % Find the first place where the spike is >1V
-dtime = tmpP(1) + BinsToAdd;                            % 120 is the number of data points to ignore after the spike.  Talk to Fridon about how this is calculated
+N = length(Data);
+tmpP = find(abs(Current) > 2000); 
+dtime = tmpP(1) + BinsToAdd;                    % 120 is the number of data points to ignore after the spike.  Talk to Fridon about how this is calculated                         % 120 is the number of data points to ignore after the spike.  Talk to Fridon about how this is calculated
+
+tol = 20000;
+dx = diff(tmpP);                                % Use this to find the difference in the tmpP, i.e how far apart each point that is greater than 2V
+m = length(find(dx>200));                       % Define the number of clusters to use in the kmeans do this by finding all the differences that are > 300
+[idx, Cent] = kmeans(tmpP,m+1);                 % Cluster the responses that happen at the spikes
+
 icount = 1;
-
-for itime = 2:length(tmpP)
-
-    timeTmp = timeIntervalNanoSeconds * (tmpP - dtime);
-    IK = find(timeTmp > 0, 1 ); 
-
-    if(isempty(IK) == 0)
-
-        icount = icount + 1;
-        itimeStart(icount) = tmpP((IK));                % This looks like the first datapoint on the indicator pulse
-        dtime = tmpP((IK)) + BinsToAdd; 
-        %dtime(icount) = tmpP((IK)) + BinsToAdd
-    end
+for igrp = 1:length(unique(idx))                % This will iterate through the groups and select the first occurance in each group to assign to Start time
+    
+    tmpgrp = find(idx == igrp);
+    itimeStart(icount) = tmpP(tmpgrp(1));
+    icount = icount+1;
+    clear tmpgrp;
 end
 
-itimeStart = itimeStart(itimeStart > 0);
+itimeStart = sort(itimeStart);
 
+%%
 
-Signal(1:2e4) = 0;                                      % Signal will be 1:2e4 in length which equates to 1e-6 to 2e-3 seconds (i.e 0.1-2000 microseconds)
-for icount = 1:length(itimeStart)-5                     % Skip the last 5 b/c of timing decay cut-offs
+ListenTimeStart = 1;                            % Use this for binning to start binning a bit later
+ListenTimeEnd = 1.33e6;                         % From 12.5ns to 16.6ms %This will change depending on sampling frequency!!
+Signal(1:ListenTimeEnd) = 0;
 
-    Signal(1:2e4)=Signal(1:2e4) + Data(itimeStart(icount)+1:itimeStart(icount)+2e4)/Current(itimeStart(icount)-BinsToAdd);      % Times step here again, dividing by current.
+for icount = 1:length(itimeStart)-1             % Skip the last 5 b/c of timing decay cut-offs
+    Signal(1:ListenTimeEnd) = Signal(1:ListenTimeEnd) + Data(itimeStart(icount)+1:itimeStart(icount)+ListenTimeEnd)/Current(itimeStart(icount)-BinsToAdd); % Times step here again, dividing by current.
 end
 
-RawTime = 1*(1:2e4)*timeIntervalNanoSeconds;
-Tmin = timeIntervalNanoSeconds;
-Tmax = 1*2e4*timeIntervalNanoSeconds;
+Signal = 1/icount*Signal;
 
-NtmpTime = 50;                                          % Number of bins
+%%
+
+RawTime = 1*(1:ListenTimeEnd)*timeIntervalNanoSeconds;
+Tmin = 1*ListenTimeStart * timeIntervalNanoSeconds;
+Tmax = 1*ListenTimeEnd*timeIntervalNanoSeconds;
+
+NtmpTime = 30;                                  % Number of bins
 Npoint = zeros(NtmpTime, 2);
 SignalFinnal = zeros(1, NtmpTime);
 
 TimeTmp = log10(Tmin):(log10(Tmax)-log10(Tmin))/NtmpTime:log10(Tmax);
+
 for ipoint = 1:size(TimeTmp,2)-1
-    
+
     Npoint(ipoint,1) = find(log10(RawTime)<=TimeTmp(ipoint), 1, 'last' );
     Npoint(ipoint,2) = find(log10(RawTime)<TimeTmp(ipoint+1), 1, 'last' );
 

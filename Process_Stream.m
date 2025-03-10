@@ -4,9 +4,9 @@ clear;
 
 %% Load Settings
 
-%settingsLoc = uigetdir('C:\Users\RDCRLDL9\Desktop\Picoscope_Collect\');
-settingsLoc = uigetdir('C:\Users\RDCRLDL9\Desktop\Data_Lite\');
-load([settingsLoc, '\settings.mat'], 'settings');
+dirLoc = uigetdir([getenv('HOMEDRIVE'), getenv('HOMEPATH'), '\Desktop\Data_Lite']);
+%settingsLoc = uigetdir('C:\Users\RDCRLDL9\Desktop\Data_Lite\');
+load([dirLoc, '\settings.mat'], 'settings');
  
 % Default Settings
 Data=[];
@@ -14,12 +14,6 @@ Current=[];
 BinsToAdd = 120;
 
 %% Load Data
-
-dirLoc = uigetdir(settingsLoc);
-if dirLoc == 0
-
-    return;
-end
 
 [dirSaveLoc, dirChosen] = fileparts(dirLoc);
 fNames = (dirChosen + "_");

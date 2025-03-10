@@ -1,11 +1,9 @@
 function Process_StreamLive(FileName)
 
-
-
 %% Load Settings
 
-%settingsLoc = uigetdir('C:\Users\RDCRLDL9\Desktop\Picoscope_Collect\');
-dataLoc = fullfile('C:\Users\RDCRLDL9\Desktop\Data_Lite\', FileName{1});
+dataLoc = fullfile([getenv('HOMEDRIVE'), getenv('HOMEPATH'), '\Desktop\Data_Lite', FileName{1}]);
+%dataLoc = fullfile('C:\Users\RDCRLDL9\Desktop\Data_Lite\', FileName{1});
 load([dataLoc, '\settings.mat'], 'settings');
  
 % Default Settings

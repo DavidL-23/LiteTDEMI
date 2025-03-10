@@ -1,4 +1,4 @@
-function TDLITE_StreamLive(app)
+function TDLITE_StreamLive_Updated(app)
 
 %% Clear command window and close any figures
 
@@ -258,7 +258,6 @@ try
         % sampling interval used by the driver.
         
         % For 200 kS/s, specify 5 us
-        % set(streamingGroupObj, 'streamingInterval', 5e-6);
         % For 10 MS/s, specify 100 ns
         set(streamingGroupObj, 'streamingInterval', timeIntervalNanoSeconds);
         
@@ -525,7 +524,7 @@ try
         fieldsize = [1 45];
         definput = {'Bkg'};
         answer = inputdlg(prompt, dlgtitle, fieldsize, definput);
-
+    
         % % Check if 'Data_Lite' folder is already created. If not, create 'Data_Lite' folder
         if not(isfolder([getenv('HOMEDRIVE'), getenv('HOMEPATH'), '\Desktop\Data_Lite']))
             mkdir([getenv('HOMEDRIVE'), getenv('HOMEPATH'), '\Desktop\Data_Lite'])
@@ -547,7 +546,7 @@ try
         save([currFolder, '\settings.mat'], 'settings')
 
         % % Process Data
-        Process_StreamLive({FNames})
+        Process_StreamLive_Updated({FNames})
 
         % %  Continue Collecting Data?
         prompt = "Continue Collecting Data? (Y/N)";
