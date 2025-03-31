@@ -11,8 +11,6 @@ function picoscope4000a_disconnect(pscope)
 
         disp('Error closing picoscope');
         disp(ME.message);                   % display error message
-        disp(ME.stack(1));              %    display stack
+        disp(ME.stack(1));                  % display stack
     end
 end
-
-% clear all; close all; clc;% clear everything

@@ -4,13 +4,12 @@ function TDLITE_StreamLive(app)
 
 sampleSize = 100e6;
 bufferSize = 50e6;
-%timeIntervalNanoSeconds = 25.0e-9;
 timeIntervalNanoSeconds = 12.5e-9;
 sampleRate = 1/timeIntervalNanoSeconds;
 
 if nargin == 0
     app.sn_current = '';
-    app.n_ch = 6;
+    app.n_ch = 6;   
     app.n_tx = 4;
     app.holdoff_s = 100e-6;
     app.off_time_s = 20e-3;
