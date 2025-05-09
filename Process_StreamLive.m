@@ -2,7 +2,7 @@ function Process_StreamLive(FileName)
 
 %% Load Settings
 
-dataLoc = fullfile([getenv('HOMEDRIVE'), getenv('HOMEPATH'), '\Desktop\Data_Lite', FileName{1}]);
+dataLoc = fullfile([getenv('HOMEDRIVE'), getenv('HOMEPATH'), '\Desktop\Data_Lite\', FileName{1}]);
 %dataLoc = fullfile('C:\Users\RDCRLDL9\Desktop\Data_Lite\', FileName{1});
 load([dataLoc, '\settings.mat'], 'settings');
  
@@ -87,7 +87,7 @@ RawTime = 1*(1:ListenTimeEnd)*timeIntervalNanoSeconds;
 Tmin = 1*ListenTimeStart * timeIntervalNanoSeconds;
 Tmax = 1*ListenTimeEnd*timeIntervalNanoSeconds;
 
-NtmpTime = 30;
+NtmpTime = 50;
 Npoint = zeros(NtmpTime, 2);
 SignalFinnal = zeros(1, NtmpTime);
 
@@ -100,6 +100,84 @@ for ipoint = 1:size(TimeTmp,2)-1
     SignalFinnal(ipoint) = mean(Signal(Npoint(ipoint,1):Npoint(ipoint,2)));
 end
 
+%% Sepearate the Positive and Negative ON Segments
+
+if Current(itimeStart(1)) < 0
+    DataStart = 0;                                      % Starts with a Negative Decay
+elseif Current(itimeStart(1)) > 0
+    DataStart = 1;                                      % Starts with a Positive Decay
+end
+
+itimeStart_Positive = [];
+itimeStart_Negative = [];
+
+% Separate indexes into Positive and Negative Decays
+for i = 1:length(itimeStart)
+
+    if mod(i, 2) == DataStart                           % Matches Starting Decay Type
+        itimeStart_Negative = [itimeStart_Negative, itimeStart(i)];
+    else
+        itimeStart_Positive = [itimeStart_Positive, itimeStart(i)];
+    end
+end
+
+% Inititalize Signals
+Signal_Positive = zeros(1, ListenTimeEnd);
+Signal_Negative = zeros(1, ListenTimeEnd);
+
+% f_11 = figure(11);
+% movegui(f_11, "northwest");
+% title('Positve Decay Segments')
+% xlabel('Time');
+% ylabel('Magnitude (V)');
+% hold on; grid on;
+
+% Process and plot positive decays
+for icount = 1:length(itimeStart_Positive)-5
+
+    Signal_Positive(1:ListenTimeEnd) = Signal_Positive(1:ListenTimeEnd) + Data(itimeStart_Positive(icount)+1:itimeStart_Positive(icount)+ListenTimeEnd)/...
+        Current(itimeStart_Positive(icount)-BinsToAdd);
+
+    %semilogx(Data(itimeStart_Positive(icount)+1:itimeStart_Positive(icount)+ListenTimeEnd));
+    % semilogx(Data(itimeStart_Positive(icount)+1:itimeStart_Positive(icount)+400));
+end
+
+% f_12 = figure(12);
+% movegui(f_12, "northwest");
+% title('Negative Decay Segments')
+% xlabel('Time');
+% ylabel('Magnitude (V)');
+% hold on; grid on;
+
+% Process and plot negative decays
+for icount = 1:length(itimeStart_Negative)-5
+
+    Signal_Negative(1:ListenTimeEnd) = Signal_Negative(1:ListenTimeEnd) + Data(itimeStart_Negative(icount)+1:itimeStart_Negative(icount)+ListenTimeEnd)/...
+        Current(itimeStart_Negative(icount)-BinsToAdd);
+
+    %semilogx(Data(itimeStart_Negative(icount)+1:itimeStart_Negative(icount)+ListenTimeEnd));
+    % semilogx(Data(itimeStart_Negative(icount)+1:itimeStart_Negative(icount)+400));
+end
+
+RawTime = 1*(1:ListenTimeEnd)*timeIntervalNanoSeconds;
+Tmin = 1*ListenTimeStart * timeIntervalNanoSeconds;
+Tmax = 1*ListenTimeEnd*timeIntervalNanoSeconds;
+
+NtmpTime = 50;
+Npoint = zeros(NtmpTime, 2);
+SignalFinnal_Pos = zeros(1, NtmpTime);
+SignalFinnal_Neg = zeros(1, NtmpTime);
+
+TimeTmp = log10(Tmin):(log10(Tmax)-log10(Tmin))/NtmpTime:log10(Tmax);
+for ipoint = 1:size(TimeTmp,2)-1
+    
+    Npoint(ipoint,1) = find(log10(RawTime)<=TimeTmp(ipoint), 1, 'last' );
+    Npoint(ipoint,2) = find(log10(RawTime)<TimeTmp(ipoint+1), 1, 'last' );
+
+    SignalFinnal_Pos(ipoint) = mean(Signal_Positive(Npoint(ipoint,1):Npoint(ipoint,2)));
+    SignalFinnal_Neg(ipoint) = mean(Signal_Negative(Npoint(ipoint,1):Npoint(ipoint,2)));
+end
+
 %% Plot Data
 
 prompt = "Is this background? (Y/N)";
@@ -109,6 +187,10 @@ if answer == "Y" || answer == 'y'
 
     BKG = SignalFinnal;
     save(fullfile(dirSaveLoc, "Background.mat"), "BKG");
+    BKG_Pos = SignalFinnal_Pos;
+    save(fullfile(dirSaveLoc, "Background_Pos.mat"), "BKG_Pos");
+    BKG_Neg = SignalFinnal_Neg;
+    save(fullfile(dirSaveLoc, "Background_Neg.mat"), "BKG_Neg");
 else
 
       answer = "N";
@@ -118,6 +200,12 @@ if answer == "N" || answer == 'n'
 
     BKG = load(fullfile(dirSaveLoc, "Background.mat"));
     BKG = BKG.BKG;
+
+    BKG_Pos = load(fullfile(dirSaveLoc, "Background_Pos.mat"));
+    BKG_Pos = BKG_Pos.BKG_Pos;
+
+    BKG_Neg = load(fullfile(dirSaveLoc, "Background_Neg.mat"));
+    BKG_Neg = BKG_Neg.BKG_Neg;
 
     figure
 
@@ -131,8 +219,33 @@ if answer == "N" || answer == 'n'
     xlabel('Frequency (Hz)')
     ylabel('Magnitude (V)')
 
-    hold off
-    grid on
-end
+    hold off; grid on;
 
+    figure
+
+    loglog(10.^TimeTmp(1:NtmpTime), abs(BKG_Pos), '--+')
+     hold on
+    loglog(10.^TimeTmp(1:NtmpTime), abs(SignalFinnal_Pos), '--x')
+    loglog(10.^TimeTmp(1:NtmpTime), abs((SignalFinnal_Pos)-(BKG_Pos)), '-o')
+
+    legend('Bkg', 'Signal', 'Bkg Subtract')
+    title('Overlayed (Positive)- ', settings{1,1})
+    xlabel('Frequency (Hz)')
+    ylabel('Magnitude (V)')
+
+    hold off; grid on;
+
+    figure
+
+    loglog(10.^TimeTmp(1:NtmpTime), abs(BKG_Neg), '--+')
+     hold on
+    loglog(10.^TimeTmp(1:NtmpTime), abs(SignalFinnal_Neg), '--x')
+    loglog(10.^TimeTmp(1:NtmpTime), abs((SignalFinnal_Neg)-(BKG_Neg)), '-o')
+
+    legend('Bkg', 'Signal', 'Bkg Subtract')
+    title('Overlayed (Negative)- ', settings{1,1})
+    xlabel('Frequency (Hz)')
+    ylabel('Magnitude (V)')
+
+    hold off; grid on;
 end
