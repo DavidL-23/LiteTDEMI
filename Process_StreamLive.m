@@ -3,7 +3,6 @@ function Process_StreamLive(FileName)
 %% Load Settings
 
 dataLoc = fullfile([getenv('HOMEDRIVE'), getenv('HOMEPATH'), '\Desktop\Data_Lite\', FileName{1}]);
-%dataLoc = fullfile('C:\Users\RDCRLDL9\Desktop\Data_Lite\', FileName{1});
 load([dataLoc, '\settings.mat'], 'settings');
  
 % Default Settings
@@ -33,7 +32,7 @@ for i = 1:NumberofWaves
 end
 
 Current = Current' - mean(Current);                     % Remove the DC spike
-Data = Data - mean(Data);
+%Data = Data - mean(Data);
 
 %% Data Binning
 
@@ -45,7 +44,7 @@ dtime = tmpP(1) + BinsToAdd;                            % 120 is the number of d
 
 tol = 20000;
 dx = diff(tmpP);                                        % Use this to find the difference in the tmpP, i.e how far apart each point that is greater than 2V
-m = length(find(dx>200));                               % Define the number of clusters to use in the kmeans do this by finding all the differences that are > 300
+m = length(find(dx > 200));                               % Define the number of clusters to use in the kmeans do this by finding all the differences that are > 300
 [idx, Cent] = kmeans(tmpP, m+1);                          % Cluster the responses that happen at the spikes
 
 icount = 1;
@@ -79,6 +78,7 @@ for icount = 1:length(itimeStart)-5                     % Skip the last 5 b/c of
         Current(itimeStart(icount)-BinsToAdd);          % Times step here again, dividing by current.
 
     %semilogx(Data(itimeStart(icount)+1:itimeStart(icount)+ListenTimeEnd));
+    %semilogx(Data(itimeStart(icount)+1:itimeStart(icount))+400);
 end
 
 %%
@@ -139,7 +139,7 @@ for icount = 1:length(itimeStart_Positive)-5
         Current(itimeStart_Positive(icount)-BinsToAdd);
 
     %semilogx(Data(itimeStart_Positive(icount)+1:itimeStart_Positive(icount)+ListenTimeEnd));
-    % semilogx(Data(itimeStart_Positive(icount)+1:itimeStart_Positive(icount)+400));
+    %semilogx(Data(itimeStart_Positive(icount)+1:itimeStart_Positive(icount)+400));
 end
 
 % f_12 = figure(12);

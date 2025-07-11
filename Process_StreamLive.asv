@@ -1,9 +1,10 @@
-clear; 
+function Process_StreamLive(FileName)
 
 %% Load Settings
 
-dirLoc = uigetdir([getenv('HOMEDRIVE'), getenv('HOMEPATH'), '\Desktop\Data_Lite\']);
-load([dirLoc, '\settings.mat'], 'settings');
+dataLoc = fullfile([getenv('HOMEDRIVE'), getenv('HOMEPATH'), '\Desktop\Data_Lite\', FileName{1}]);
+%dataLoc = fullfile('C:\Users\RDCRLDL9\Desktop\Data_Lite\', FileName{1});
+load([dataLoc, '\settings.mat'], 'settings');
  
 % Default Settings
 Data = [];
@@ -11,9 +12,9 @@ Current = [];
 
 %% Load Data
 
-[dirSaveLoc, dirChosen] = fileparts(dirLoc);
+[dirSaveLoc, dirChosen] = fileparts(dataLoc);
 fNames = (dirChosen + "_");
-fldtmp = fullfile(dirLoc, fNames);
+fldtmp = fullfile(dataLoc, fNames);
 
 result = settings(strcmp(settings.FNames, dirChosen), 2:end);
 NumberofWaves = result.Count(1);
@@ -23,7 +24,7 @@ for i = 1:NumberofWaves
     % Load Data File
     tmpN = int2str(i);
     filename = strcat(fldtmp, tmpN, '.mat');
-    load(filename);
+    load(filename, 'chA', 'chB', 'timeIntervalNanoSeconds');
 
     % Append Channels Data to Respective Arrays
     N = length(chA);
@@ -38,14 +39,14 @@ Current = Current' - mean(Current);                     % Remove the DC spike
 
 BinsToAdd = 120;
 
-tmpP = find(abs(Current) > 2000);
+tmpP = find(abs(Current) > 2000); 
 %itimeStart(1)= min(tmpP(1));                            % The first place where the space is >2V
-%dtime = tmpP(1) + BinsToAdd;                            % 120 is the number of data points to ignore after the spike.  Talk to Fridon about how this is calculated                         % 120 is the number of data points to ignore after the spike.  Talk to Fridon about how this is calculated
+dtime = tmpP(1) + BinsToAdd;                            % 120 is the number of data points to ignore after the spike.  Talk to Fridon about how this is calculated                         % 120 is the number of data points to ignore after the spike.  Talk to Fridon about how this is calculated
 
 tol = 20000;
 dx = diff(tmpP);                                        % Use this to find the difference in the tmpP, i.e how far apart each point that is greater than 2V
-m = length(find(dx > 200));                               % Define the number of clusters to use in the kmeans do this by finding all the differences that are > 300
-[idx, Cent] = kmeans(tmpP,m+1);                          % Cluster the responses that happen at the spikes
+m = length(find(dx>200));                               % Define the number of clusters to use in the kmeans do this by finding all the differences that are > 300
+[idx, Cent] = kmeans(tmpP, m+1);                          % Cluster the responses that happen at the spikes
 
 icount = 1;
 for igrp = 1:length(unique(idx))                        % This will iterate through the groups and select the first occurance in each group to assign to Start time
@@ -74,11 +75,10 @@ Signal(1:ListenTimeEnd) = 0;
 
 for icount = 1:length(itimeStart)-5                     % Skip the last 5 b/c of timing decay cut-offs
 
-    Signal(1:ListenTimeEnd) = Signal(1:ListenTimeEnd) + Data(itimeStart(icount)+1:itimeStart(icount)+ListenTimeEnd)/...
+    Signal(1:ListenTimeEnd)=Signal(1:ListenTimeEnd) + Data(itimeStart(icount)+1:itimeStart(icount)+ListenTimeEnd)/...
         Current(itimeStart(icount)-BinsToAdd);          % Times step here again, dividing by current.
 
     %semilogx(Data(itimeStart(icount)+1:itimeStart(icount)+ListenTimeEnd));
-    %semilogx(Data(itimeStart(icount)+1:itimeStart(icount))+400);
 end
 
 %%
@@ -139,7 +139,7 @@ for icount = 1:length(itimeStart_Positive)-5
         Current(itimeStart_Positive(icount)-BinsToAdd);
 
     %semilogx(Data(itimeStart_Positive(icount)+1:itimeStart_Positive(icount)+ListenTimeEnd));
-    %semilogx(Data(itimeStart_Positive(icount)+1:itimeStart_Positive(icount)+400));
+    % semilogx(Data(itimeStart_Positive(icount)+1:itimeStart_Positive(icount)+400));
 end
 
 % f_12 = figure(12);
