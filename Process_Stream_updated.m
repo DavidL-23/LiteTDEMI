@@ -5,7 +5,6 @@ clear;
 %% Load Settings
 
 dirLoc = uigetdir([getenv('HOMEDRIVE'), getenv('HOMEPATH'), '\Desktop\Data_Lite\']);
-%settingsLoc = uigetdir('C:\Users\RDCRLDL9\Desktop\Data_Lite\');
 load([dirLoc, '\settings.mat'], 'settings');
  
 % Default Settings
@@ -30,7 +29,7 @@ for i = 1:NumberofWaves
 
     % Append Channels Data to Respective Arrays
     N = length(chA);
-    Data((i-1)*N+1:i*N) = chA(1:N);
+    Data   ((i-1)*N+1:i*N) = chA(1:N);
     Current((i-1)*N+1:i*N) = chB(1:N);
 end
 

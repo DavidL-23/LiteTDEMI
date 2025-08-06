@@ -221,31 +221,31 @@ if answer == "N" || answer == 'n'
 
     hold off; grid on;
 
-    figure
+    % figure
+    % 
+    % loglog(10.^TimeTmp(1:NtmpTime), abs(BKG_Pos), '--+')
+    %  hold on
+    % loglog(10.^TimeTmp(1:NtmpTime), abs(SignalFinnal_Pos), '--x')
+    % loglog(10.^TimeTmp(1:NtmpTime), abs((SignalFinnal_Pos)-(BKG_Pos)), '-o')
+    % 
+    % legend('Bkg', 'Signal', 'Bkg Subtract')
+    % title('Overlayed (Positive)- ', settings{1,1})
+    % xlabel('Frequency (Hz)')
+    % ylabel('Magnitude (V)')
+    % 
+    % hold off; grid on;
 
-    loglog(10.^TimeTmp(1:NtmpTime), abs(BKG_Pos), '--+')
-     hold on
-    loglog(10.^TimeTmp(1:NtmpTime), abs(SignalFinnal_Pos), '--x')
-    loglog(10.^TimeTmp(1:NtmpTime), abs((SignalFinnal_Pos)-(BKG_Pos)), '-o')
-
-    legend('Bkg', 'Signal', 'Bkg Subtract')
-    title('Overlayed (Positive)- ', settings{1,1})
-    xlabel('Frequency (Hz)')
-    ylabel('Magnitude (V)')
-
-    hold off; grid on;
-
-    figure
-
-    loglog(10.^TimeTmp(1:NtmpTime), abs(BKG_Neg), '--+')
-     hold on
-    loglog(10.^TimeTmp(1:NtmpTime), abs(SignalFinnal_Neg), '--x')
-    loglog(10.^TimeTmp(1:NtmpTime), abs((SignalFinnal_Neg)-(BKG_Neg)), '-o')
-
-    legend('Bkg', 'Signal', 'Bkg Subtract')
-    title('Overlayed (Negative)- ', settings{1,1})
-    xlabel('Frequency (Hz)')
-    ylabel('Magnitude (V)')
-
-    hold off; grid on;
+    % figure
+    % 
+    % loglog(10.^TimeTmp(1:NtmpTime), abs(BKG_Neg), '--+')
+    %  hold on
+    % loglog(10.^TimeTmp(1:NtmpTime), abs(SignalFinnal_Neg), '--x')
+    % loglog(10.^TimeTmp(1:NtmpTime), abs((SignalFinnal_Neg)-(BKG_Neg)), '-o')
+    % 
+    % legend('Bkg', 'Signal', 'Bkg Subtract')
+    % title('Overlayed (Negative)- ', settings{1,1})
+    % xlabel('Frequency (Hz)')
+    % ylabel('Magnitude (V)')
+    % 
+    % hold off; grid on;
 end

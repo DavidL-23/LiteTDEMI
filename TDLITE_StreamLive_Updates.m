@@ -1,4 +1,7 @@
-function TDLITE_StreamLive(app)
+function TDLITE_StreamLive_Updates(app)
+
+clc
+close all
 
 %% Clear command window and close any figures
 

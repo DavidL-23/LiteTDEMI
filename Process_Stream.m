@@ -1,4 +1,6 @@
-clear; 
+% clc;
+% clear; 
+% clear All;
 
 %% Load Settings
 
@@ -27,13 +29,15 @@ for i = 1:NumberofWaves
 
     % Append Channels Data to Respective Arrays
     N = length(chA);
-    Data((i-1)*N+1:i*N) = chA(1:N);
+    Data   ((i-1)*N+1:i*N) = chA(1:N);
     Current((i-1)*N+1:i*N) = chB(1:N);
 end
 
 Current = Current' - mean(Current);                     % Remove the DC spike
 %Data = Data - mean(Data);
 
+% Current = Current ./ 1000;
+% Data = Data ./ 1000;
 %% Data Binning
 
 BinsToAdd = 120;
@@ -87,7 +91,7 @@ RawTime = 1*(1:ListenTimeEnd)*timeIntervalNanoSeconds;
 Tmin = 1*ListenTimeStart * timeIntervalNanoSeconds;
 Tmax = 1*ListenTimeEnd*timeIntervalNanoSeconds;
 
-NtmpTime = 50;
+NtmpTime = 30;
 Npoint = zeros(NtmpTime, 2);
 SignalFinnal = zeros(1, NtmpTime);
 
@@ -163,7 +167,7 @@ RawTime = 1*(1:ListenTimeEnd)*timeIntervalNanoSeconds;
 Tmin = 1*ListenTimeStart * timeIntervalNanoSeconds;
 Tmax = 1*ListenTimeEnd*timeIntervalNanoSeconds;
 
-NtmpTime = 50;
+%NtmpTime = 30;
 Npoint = zeros(NtmpTime, 2);
 SignalFinnal_Pos = zeros(1, NtmpTime);
 SignalFinnal_Neg = zeros(1, NtmpTime);
@@ -221,31 +225,31 @@ if answer == "N" || answer == 'n'
 
     hold off; grid on;
 
-    figure
-
-    loglog(10.^TimeTmp(1:NtmpTime), abs(BKG_Pos), '--+')
-     hold on
-    loglog(10.^TimeTmp(1:NtmpTime), abs(SignalFinnal_Pos), '--x')
-    loglog(10.^TimeTmp(1:NtmpTime), abs((SignalFinnal_Pos)-(BKG_Pos)), '-o')
-
-    legend('Bkg', 'Signal', 'Bkg Subtract')
-    title('Overlayed (Positive)- ', settings{1,1})
-    xlabel('Frequency (Hz)')
-    ylabel('Magnitude (V)')
-
-    hold off; grid on;
-
-    figure
-
-    loglog(10.^TimeTmp(1:NtmpTime), abs(BKG_Neg), '--+')
-     hold on
-    loglog(10.^TimeTmp(1:NtmpTime), abs(SignalFinnal_Neg), '--x')
-    loglog(10.^TimeTmp(1:NtmpTime), abs((SignalFinnal_Neg)-(BKG_Neg)), '-o')
-
-    legend('Bkg', 'Signal', 'Bkg Subtract')
-    title('Overlayed (Negative)- ', settings{1,1})
-    xlabel('Frequency (Hz)')
-    ylabel('Magnitude (V)')
-
-    hold off; grid on;
+    % figure
+    % 
+    % loglog(10.^TimeTmp(1:NtmpTime), abs(BKG_Pos), '--+')
+    %  hold on
+    % loglog(10.^TimeTmp(1:NtmpTime), abs(SignalFinnal_Pos), '--x')
+    % loglog(10.^TimeTmp(1:NtmpTime), abs((SignalFinnal_Pos)-(BKG_Pos)), '-o')
+    % 
+    % legend('Bkg', 'Signal', 'Bkg Subtract')
+    % title('Overlayed (Positive)- ', settings{1,1})
+    % xlabel('Frequency (Hz)')
+    % ylabel('Magnitude (V)')
+    % 
+    % hold off; grid on;
+    % 
+    % figure
+    % 
+    % loglog(10.^TimeTmp(1:NtmpTime), abs(BKG_Neg), '--+')
+    %  hold on
+    % loglog(10.^TimeTmp(1:NtmpTime), abs(SignalFinnal_Neg), '--x')
+    % loglog(10.^TimeTmp(1:NtmpTime), abs((SignalFinnal_Neg)-(BKG_Neg)), '-o')
+    % 
+    % legend('Bkg', 'Signal', 'Bkg Subtract')
+    % title('Overlayed (Negative)- ', settings{1,1})
+    % xlabel('Frequency (Hz)')
+    % ylabel('Magnitude (V)')
+    % 
+    % hold off; grid on;
 end
